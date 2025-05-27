@@ -5,7 +5,7 @@ from textnode import TextNode, TextType
 
 
 class TestInlineMarkdown(unittest.TestCase):
-    def test_delim(self):
+    def test_delim_code(self):
         node = TextNode("This is a text with a `code block` word", TextType.TEXT)
         new_nodes = split_nodes_delimiter([node], "`", TextType.CODE)
         self.assertEqual(
@@ -39,3 +39,19 @@ class TestInlineMarkdown(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             split_nodes_delimiter([node], "`", TextType.CODE)
+
+    def test_delim_bold_and_italic(self):
+        node = TextNode("**bold** and _italic_", TextType.TEXT)
+        new_nodes = split_nodes_delimiter([node], "**", TextType.BOLD)
+        new_nodes = split_nodes_delimiter(new_nodes, "_", TextType.ITALIC)
+        self.assertListEqual(
+            [
+                TextNode("bold", TextType.BOLD),
+                TextNode(" and ", TextType.TEXT),
+                TextNode("italic", TextType.ITALIC),
+            ],
+            new_nodes,
+        )
+
+    if __name__ == "__main__":
+        unittest.main()
