@@ -142,7 +142,7 @@ def quote_to_html_node(block):
         p_children = text_to_children(quote)
         grandchildren.append(ParentNode("p", p_children))
 
-    return ParentNode("quoteblock", grandchildren)
+    return ParentNode("blockquote", grandchildren)
 
 
 def ulist_to_html_node(block):

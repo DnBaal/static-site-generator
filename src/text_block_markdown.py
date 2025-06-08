@@ -119,11 +119,26 @@ and third one
         block = "paragraph"
         self.assertEqual(block_to_block_type(block), BlockType.PARAGRAPH)
 
-    def test_markdown_to_html_node_heading(self):
+    def test_heading(self):
         md = "### three heading hello!"
         node = markdown_to_html_node(md)
         html = node.to_html()
         self.assertEqual(html, "<div><h3>three heading hello!</h3></div>")
+
+    def test_headings(self):
+        md = """
+# This is an h1
+
+this is paragraph
+
+## this is an h2
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><h1>This is an h1</h1><p>this is paragraph</p><h2>this is an h2</h2></div>",
+        )
 
     def test_paragraphs(self):
         md = """
@@ -156,50 +171,70 @@ the **same** even with inline stuff
             "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
         )
 
-    def test_quoteblock(self):
+    def test_blockquote(self):
         md = """
->This is **bolded** paragraph
+>This is **bolded** quote
 >text in a p
 >tag here
->This is another paragraph with _italic_ text and `code` here
+>This is another line of quote with _italic_ text and `code` here
+
+this is paragraph after quote
 """
 
         node = markdown_to_html_node(md)
         html = node.to_html()
         self.assertEqual(
             html,
-            "<div><quoteblock><p>This is <b>bolded</b> paragraph text in a p tag here This is another paragraph with <i>italic</i> text and <code>code</code> here</p></quoteblock></div>",
+            "<div><blockquote><p>This is <b>bolded</b> quote text in a p tag here This is another line of quote with <i>italic</i> text and <code>code</code> here</p></blockquote><p>this is paragraph after quote</p></div>",
         )
 
-    def test_quoteblock_quotes(self):
+    def test_blockquote_quotes(self):
         md = """
->This is **bolded** paragraph
+>This is **bolded** quote paragraph
 >text in a p
 >tag here
 >
->This is another paragraph with _italic_ text and `code` here
+>This is another quote paragraph with _italic_ text and `code` here
 """
 
         node = markdown_to_html_node(md)
         html = node.to_html()
         self.assertEqual(
             html,
-            "<div><quoteblock><p>This is <b>bolded</b> paragraph text in a p tag here</p><p>This is another paragraph with <i>italic</i> text and <code>code</code> here</p></quoteblock></div>",
+            "<div><blockquote><p>This is <b>bolded</b> quote paragraph text in a p tag here</p><p>This is another quote paragraph with <i>italic</i> text and <code>code</code> here</p></blockquote></div>",
+        )
+
+    def test_lists(self):
+        md = """
+- This  is a list
+- with items
+- and _more_ items
+
+1. This is an `ordered` list
+2. with items
+3. and more items
+
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><ul><li>This  is a list</li><li>with items</li><li>and <i>more</i> items</li></ul><ol><li>This is an <code>ordered</code> list</li><li>with items</li><li>and more items</li></ol></div>",
         )
 
     def test_ulist(self):
         md = """
-- This is **bolded** paragraph
+- This is **bolded** quote paragraph
 - text in a p
 - tag here
-- This is another paragraph with _italic_ text and `code` here
+- This is another item of quote with _italic_ text and `code` here
 """
 
         node = markdown_to_html_node(md)
         html = node.to_html()
         self.assertEqual(
             html,
-            "<div><ul><li>This is <b>bolded</b> paragraph</li><li>text in a p</li><li>tag here</li><li>This is another paragraph with <i>italic</i> text and <code>code</code> here</li></ul></div>",
+            "<div><ul><li>This is <b>bolded</b> quote paragraph</li><li>text in a p</li><li>tag here</li><li>This is another item of quote with <i>italic</i> text and <code>code</code> here</li></ul></div>",
         )
 
     def test_olist(self):
