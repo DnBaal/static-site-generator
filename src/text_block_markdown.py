@@ -224,32 +224,32 @@ this is paragraph after quote
 
     def test_ulist(self):
         md = """
-- This is **bolded** quote paragraph
-- text in a p
-- tag here
-- This is another item of quote with _italic_ text and `code` here
+- This is **bolded** item of list
+- and second item
+- one more
+- This is another item of list with _italic_ text and `code` here
 """
 
         node = markdown_to_html_node(md)
         html = node.to_html()
         self.assertEqual(
             html,
-            "<div><ul><li>This is <b>bolded</b> quote paragraph</li><li>text in a p</li><li>tag here</li><li>This is another item of quote with <i>italic</i> text and <code>code</code> here</li></ul></div>",
+            "<div><ul><li>This is <b>bolded</b> item of list</li><li>and second item</li><li>one more</li><li>This is another item of list with <i>italic</i> text and <code>code</code> here</li></ul></div>",
         )
 
     def test_olist(self):
         md = """
-1. This is **bolded** paragraph
-2. text in a p
-3. tag here
-4. This is another paragraph with _italic_ text and `code` here
+1. This is **bolded** item of ordered list
+2. and second item
+3. one more
+4. This is another item of ordered list with _italic_ text and `code` here
 """
 
         node = markdown_to_html_node(md)
         html = node.to_html()
         self.assertEqual(
             html,
-            "<div><ol><li>This is <b>bolded</b> paragraph</li><li>text in a p</li><li>tag here</li><li>This is another paragraph with <i>italic</i> text and <code>code</code> here</li></ol></div>",
+            "<div><ol><li>This is <b>bolded</b> item of ordered list</li><li>and second item</li><li>one more</li><li>This is another item of ordered list with <i>italic</i> text and <code>code</code> here</li></ol></div>",
         )
 
 
