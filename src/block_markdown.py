@@ -15,80 +15,6 @@ class BlockType(Enum):
     OLIST = "ordered_list"
 
 
-def markdown_to_html_node(markdown):
-    blocks = markdown_to_blocks(markdown)
-    children = []
-    for block in blocks:
-        match block_to_block_type(block):
-            case BlockType.PARAGRAPH:
-                grandchildren = text_to_children(block)
-                parent_node = ParentNode("p", grandchildren)
-                children.append(parent_node)
-
-            case BlockType.HEADING:
-                match = re.match(r"^(#{1,6})\s(.*)", block)
-                if match:
-                    heading_type = match.group(1)
-                    text = match.group(2)
-                    grandchildren = text_to_children(text)
-                    parent_node = ParentNode(f"h{len(heading_type)}", grandchildren)
-                    children.append(parent_node)
-
-            case BlockType.CODE:
-                match = re.search(r"```\n(.*?)```", block, re.DOTALL)
-                if match:
-                    text = match.group(1)
-                    code_node = TextNode(text, TextType.CODE)
-                    parent_node = ParentNode("pre", [text_node_to_html_node(code_node)])
-                    children.append(parent_node)
-
-            case BlockType.QUOTE:
-                lines = block.split(">")
-                quote = ""
-                grandchildren = []
-                for line in lines:
-                    if line == "\n" and quote:
-                        p_children = text_to_children(quote)
-                        grandchildren.append(ParentNode("p", p_children))
-                        quote = ""
-                        continue
-                    quote += line
-                if quote:
-                    p_children = text_to_children(quote)
-                    grandchildren.append(ParentNode("p", p_children))
-                children.append(ParentNode("quoteblock", grandchildren))
-
-            case BlockType.ULIST:
-                lines = block.split("- ")
-                grandchildren = []
-                for line in lines:
-                    if line:
-                        li_children = text_to_children(line)
-                        grandchildren.append(ParentNode("li", li_children))
-                children.append(ParentNode("ul", grandchildren))
-
-            case BlockType.OLIST:
-                lines = re.split(r"\d+\.\s", block)
-                grandchildren = []
-                for line in lines:
-                    if line:
-                        li_children = text_to_children(line)
-                        grandchildren.append(ParentNode("li", li_children))
-                children.append(ParentNode("ol", grandchildren))
-
-    div_parent = ParentNode("div", children)
-    return div_parent
-
-
-def text_to_children(text):
-    text = text.replace("\n", " ").strip()
-    children = []
-    textnodes = text_to_textnodes(text)
-    for textnode in textnodes:
-        children.append(text_node_to_html_node(textnode))
-    return children
-
-
 def markdown_to_blocks(markdown):
     fixed_blocks = []
     blocks = re.split(r"\n\s*\n", markdown)
@@ -127,3 +53,115 @@ def block_to_block_type(block):
         return BlockType.OLIST
 
     return BlockType.PARAGRAPH
+
+
+def markdown_to_html_node(markdown):
+    blocks = markdown_to_blocks(markdown)
+    children = []
+    for block in blocks:
+        html_node = block_to_html_node(block)
+        children.append(html_node)
+
+    return ParentNode("div", children)
+
+
+def block_to_html_node(block):
+    block_type = block_to_block_type(block)
+    match block_type:
+        case BlockType.PARAGRAPH:
+            return paragraph_to_html_node(block)
+        case BlockType.HEADING:
+            return heading_to_html_node(block)
+        case BlockType.CODE:
+            return code_to_html_node(block)
+        case BlockType.QUOTE:
+            return quote_to_html_node(block)
+        case BlockType.ULIST:
+            return ulist_to_html_node(block)
+        case BlockType.OLIST:
+            return olist_to_html_node(block)
+    raise ValueError("Invalid block type")
+
+
+def text_to_children(text):
+    children = []
+    textnodes = text_to_textnodes(text)
+    for textnode in textnodes:
+        children.append(text_node_to_html_node(textnode))
+    return children
+
+
+def paragraph_to_html_node(block):
+    lines = block.split("\n")
+    paragraph = " ".join(lines)
+    children = text_to_children(paragraph)
+    return ParentNode("p", children)
+
+
+def heading_to_html_node(block):
+    lvl = 0
+    for char in block:
+        if char != "#":
+            break
+        lvl += 1
+    if lvl + 1 >= len(block):
+        raise ValueError(f"Invalid heading level: {lvl}")
+
+    text = block[lvl + 1 :]
+    children = text_to_children(text)
+
+    return ParentNode(f"h{lvl}", children)
+
+
+def code_to_html_node(block):
+    if not block.startswith("```") or not block.endswith("```"):
+        raise ValueError("Invalid code block")
+    text = block[4:-3]
+    raw_text_node = TextNode(text, TextType.CODE)
+    child = text_node_to_html_node(raw_text_node)
+
+    return ParentNode("pre", [child])
+
+
+def quote_to_html_node(block):
+    lines = block.split("\n")
+    grandchildren = []
+    p_block = []
+    for line in lines:
+        stripped = line.lstrip(">").strip()
+        if not stripped and p_block:
+            quote = " ".join(p_block)
+            p_children = text_to_children(quote)
+            grandchildren.append(ParentNode("p", p_children))
+            p_block = []
+        else:
+            p_block.append(stripped)
+
+    if p_block:
+        quote = " ".join(p_block)
+        p_children = text_to_children(quote)
+        grandchildren.append(ParentNode("p", p_children))
+
+    return ParentNode("quoteblock", grandchildren)
+
+
+def ulist_to_html_node(block):
+    lines = block.split("\n")
+    html_items = []
+    for line in lines:
+        text = line[2:]
+        children = text_to_children(text)
+        html_items.append(ParentNode("li", children))
+
+    return ParentNode("ul", html_items)
+
+
+def olist_to_html_node(block):
+    lines = block.split("\n")
+    html_items = []
+    for line in lines:
+        text = line[3:]
+        children = text_to_children(text)
+        html_items.append(ParentNode("li", children))
+
+    return ParentNode("ol", html_items)
