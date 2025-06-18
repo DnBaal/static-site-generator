@@ -125,24 +125,15 @@ def code_to_html_node(block):
 
 def quote_to_html_node(block):
     lines = block.split("\n")
-    grandchildren = []
-    p_block = []
+    new_lines = []
     for line in lines:
-        stripped = line.lstrip(">").strip()
-        if not stripped and p_block:
-            quote = " ".join(p_block)
-            p_children = text_to_children(quote)
-            grandchildren.append(ParentNode("p", p_children))
-            p_block = []
-        else:
-            p_block.append(stripped)
+        if not line.startswith(">"):
+            raise ValueError("Invalid quote block")
+        new_lines.append(line.lstrip(">").strip())
+    content = " ".join(new_lines)
+    children = text_to_children(content)
 
-    if p_block:
-        quote = " ".join(p_block)
-        p_children = text_to_children(quote)
-        grandchildren.append(ParentNode("p", p_children))
-
-    return ParentNode("blockquote", grandchildren)
+    return ParentNode("blockquote", children)
 
 
 def ulist_to_html_node(block):
