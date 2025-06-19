@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from block_markdown import markdown_to_html_node
 
@@ -28,9 +29,20 @@ def generate_page(from_path, template_path, dst_path):
     if dst_dir_path and not os.path.exists(dst_dir_path):
         os.makedirs(dst_dir_path, exist_ok=True)
 
-    try:
-        with open(dst_path, "w") as f:
-            f.write(template)
-        print(f"Wrote to: {dst_path}")
-    except IOError as e:
-        print(f"Error writing to file {dst_path}: {e}")
+    with open(dst_path, "w") as f:
+        f.write(template)
+    print(f"Wrote to: {dst_path}")
+
+
+def generate_pages_recursive(dir_path_content, template_path, dst_dir_path):
+    if not os.path.exists(dir_path_content):
+        raise ValueError("No src directory")
+
+    for filename in os.listdir(dir_path_content):
+        from_path = os.path.join(dir_path_content, filename)
+        dst_path = os.path.join(dst_dir_path, filename)
+        if os.path.isfile(from_path):
+            dst_path = Path(dst_path).with_suffix(".html")
+            generate_page(from_path, template_path, dst_path)
+        else:
+            generate_pages_recursive(from_path, template_path, dst_path)
