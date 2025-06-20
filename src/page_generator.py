@@ -13,7 +13,7 @@ def extract_title(md):
     raise ValueError("No h1 header")
 
 
-def generate_page(from_path, template_path, dst_path):
+def generate_page(from_path, template_path, dst_path, basepath):
     print(f" * {from_path} {template_path} -> {dst_path}")
 
     with open(from_path, "r") as from_file, open(template_path) as template_file:
@@ -24,6 +24,8 @@ def generate_page(from_path, template_path, dst_path):
     title = extract_title(md)
     template = template.replace("{{ Title }}", title)
     template = template.replace("{{ Content }}", html)
+    template = template.replace('href="/', f'href="{basepath}')
+    template = template.replace('src="/', f'src="{basepath}')
 
     dst_dir_path = os.path.dirname(dst_path)
     if dst_dir_path and not os.path.exists(dst_dir_path):
@@ -34,7 +36,7 @@ def generate_page(from_path, template_path, dst_path):
     print(f"Wrote to: {dst_path}")
 
 
-def generate_pages_recursive(dir_path_content, template_path, dst_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dst_dir_path, basepath):
     if not os.path.exists(dir_path_content):
         raise ValueError("No src directory")
 
@@ -43,6 +45,6 @@ def generate_pages_recursive(dir_path_content, template_path, dst_dir_path):
         dst_path = os.path.join(dst_dir_path, filename)
         if os.path.isfile(from_path):
             dst_path = Path(dst_path).with_suffix(".html")
-            generate_page(from_path, template_path, dst_path)
+            generate_page(from_path, template_path, dst_path, basepath)
         else:
-            generate_pages_recursive(from_path, template_path, dst_path)
+            generate_pages_recursive(from_path, template_path, dst_path, basepath)
